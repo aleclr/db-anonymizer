@@ -1,0 +1,6 @@
+db_type: mysql # or postgresql
+host: localhost
+port: 5432
+user: root
+password: alec
+database: anon_test
