@@ -2,9 +2,16 @@ import pandas as pd
 import os
 from src.utils import sanitize_column_name
 
-def export_tables(conn, output_dir):
+def export_tables(conn, output_dir, db_type, db_name):
     cursor = conn.cursor()
-    cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public';")
+
+    if db_type == "postgresql":
+        cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public';")
+    elif db_type == "mysql":
+        cursor.execute(f"SELECT table_name FROM information_schema.tables WHERE table_schema='{db_name}';")
+    else:
+        raise ValueError("Unsupported database type for export")
+
     tables = cursor.fetchall()
 
     os.makedirs(output_dir, exist_ok=True)

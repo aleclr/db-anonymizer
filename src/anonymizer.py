@@ -1,18 +1,48 @@
 import os
 import pandas as pd
-from data_anonymizer import anonymize
+import hashlib
+import random
+import string
+
+def mask_email(email):
+    if pd.isna(email):
+        return email
+    return "masked_" + hashlib.md5(email.encode()).hexdigest()[:10] + "@example.com"
+
+def mask_name(name):
+    if pd.isna(name):
+        return name
+    return "Name_" + ''.join(random.choices(string.ascii_uppercase, k=5))
+
+def mask_cpf(cpf):
+    if pd.isna(cpf):
+        return cpf
+    return ''.join([str(random.randint(0, 9)) for _ in range(11)])
+
+def mask_phone(phone):
+    if pd.isna(phone):
+        return phone
+    return ''.join([str(random.randint(0, 9)) for _ in range(11)])
 
 def anonymize_csv_files(input_dir, output_dir):
     os.makedirs(output_dir, exist_ok=True)
 
-    for file in os.listdir(input_dir):
-        if file.endswith(".csv"):
-            df = pd.read_csv(os.path.join(input_dir, file))
+    file = "clients.csv"
+    file_path = os.path.join(input_dir, file)
+    if not os.path.exists(file_path):
+        print("clients.csv not found. Skipping anonymization.")
+        return
 
-            # Regra exemplo: mascarar todos os valores
-            # Aqui você pode definir regras mais complexas conforme necessário
-            rules = {col: {"type": "mask", "value": "***"} for col in df.columns}
+    df = pd.read_csv(file_path)
 
-            anon_df = anonymize(df, rules)
-            anon_df.to_csv(os.path.join(output_dir, file), index=False)
-            print(f"Anonymized: {file}")
+    if 'name' in df.columns:
+        df['name'] = df['name'].apply(mask_name)
+    if 'email' in df.columns:
+        df['email'] = df['email'].apply(mask_email)
+    if 'cpf' in df.columns:
+        df['cpf'] = df['cpf'].apply(mask_cpf)
+    if 'phone' in df.columns:
+        df['phone'] = df['phone'].apply(mask_phone)
+
+    df.to_csv(os.path.join(output_dir, file), index=False)
+    print(f"Anonymized: {file}")

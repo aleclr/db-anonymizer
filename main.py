@@ -10,13 +10,14 @@ def main(step):
     conn = get_connection(config)
 
     if step == "export":
-        export_tables(conn, "csv_exports")
+        export_tables(conn, "csv_exports", config["db_type"], config["database"])
     elif step == "anonymize":
         anonymize_csv_files("csv_exports", "csv_anonymized")
     elif step == "import":
         import_tables_from_csv(config, "csv_anonymized")
     elif step == "all":
-        export_tables(conn, "csv_exports")
+        export_tables(conn, "csv_exports", config["db_type"], config["database"])
+        conn.close()
         anonymize_csv_files("csv_exports", "csv_anonymized")
         import_tables_from_csv(config, "csv_anonymized")
     else:
