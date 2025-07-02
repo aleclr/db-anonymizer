@@ -4,6 +4,8 @@ import hashlib
 import random
 import string
 import yaml
+import numpy as np
+from datetime import datetime, timedelta
 
 def mask_email(email):
     if pd.isna(email):
@@ -25,11 +27,56 @@ def mask_phone(phone):
         return phone
     return ''.join([str(random.randint(0, 9)) for _ in range(11)])
 
+def mask_string(value):
+    if pd.isna(value):
+        return value
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+
+def mask_integer(value):
+    if pd.isna(value):
+        return value
+    return random.randint(1000, 999999)
+
+def mask_float(value):
+    if pd.isna(value):
+        return value
+    return round(random.uniform(1000.0, 99999.9), 2)
+
+def mask_date(value):
+    if pd.isna(value):
+        return value
+    try:
+        base_date = pd.to_datetime(value)
+        random_days = random.randint(-365, 365)
+        return (base_date + timedelta(days=random_days)).date()
+    except:
+        return value
+
+def mask_boolean(value):
+    if pd.isna(value):
+        return value
+    return random.choice([True, False])
+
+def nullify(value):
+    return np.nan
+
+def hash_value(value):
+    if pd.isna(value):
+        return value
+    return hashlib.sha256(str(value).encode()).hexdigest()
+
 MASK_FUNCTIONS = {
     'mask_email': mask_email,
     'mask_name': mask_name,
     'mask_cpf': mask_cpf,
-    'mask_phone': mask_phone
+    'mask_phone': mask_phone,
+    'mask_string': mask_string,
+    'mask_integer': mask_integer,
+    'mask_float': mask_float,
+    'mask_date': mask_date,
+    'mask_boolean': mask_boolean,
+    'nullify': nullify,
+    'hash_value': hash_value
 }
 
 def load_rules(config_path="config/anonymization_rules.yaml"):
