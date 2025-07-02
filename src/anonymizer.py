@@ -3,6 +3,7 @@ import pandas as pd
 import hashlib
 import random
 import string
+import yaml
 
 def mask_email(email):
     if pd.isna(email):
@@ -24,25 +25,38 @@ def mask_phone(phone):
         return phone
     return ''.join([str(random.randint(0, 9)) for _ in range(11)])
 
-def anonymize_csv_files(input_dir, output_dir):
+MASK_FUNCTIONS = {
+    'mask_email': mask_email,
+    'mask_name': mask_name,
+    'mask_cpf': mask_cpf,
+    'mask_phone': mask_phone
+}
+
+def load_rules(config_path="config/anonymization_rules.yaml"):
+    if not os.path.exists(config_path):
+        print("Anonymization rules not found. Skipping anonymization.")
+        return {}
+    with open(config_path, 'r') as f:
+        return yaml.safe_load(f)
+    
+
+
+def anonymize_csv_files(input_dir, output_dir, rules_path="config/anonymization_rules.yaml"):
     os.makedirs(output_dir, exist_ok=True)
+    rules = load_rules(rules_path)
 
-    file = "clients.csv"
-    file_path = os.path.join(input_dir, file)
-    if not os.path.exists(file_path):
-        print("clients.csv not found. Skipping anonymization.")
-        return
+    for file in os.listdir(input_dir):
+        if file.endswith(".csv"):
+            table_name = file.replace(".csv", "")
+            df = pd.read_csv(os.path.join(input_dir, file))
 
-    df = pd.read_csv(file_path)
+            # Normalize column names
+            df.columns = [c.strip().lower().replace(" ", "_") for c in df.columns]
 
-    if 'name' in df.columns:
-        df['name'] = df['name'].apply(mask_name)
-    if 'email' in df.columns:
-        df['email'] = df['email'].apply(mask_email)
-    if 'cpf' in df.columns:
-        df['cpf'] = df['cpf'].apply(mask_cpf)
-    if 'phone' in df.columns:
-        df['phone'] = df['phone'].apply(mask_phone)
+            table_rules = rules.get(table_name, {})
+            for column, rule in table_rules.items():
+                if column in df.columns and rule in MASK_FUNCTIONS:
+                    df[column] = df[column].apply(MASK_FUNCTIONS[rule])
 
-    df.to_csv(os.path.join(output_dir, file), index=False)
-    print(f"Anonymized: {file}")
+            df.to_csv(os.path.join(output_dir, file), index=False)
+            print(f"Anonymized: {file}")

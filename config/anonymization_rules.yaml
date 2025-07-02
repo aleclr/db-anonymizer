@@ -1,0 +1,19 @@
+# This file defines the anonymization rules for various fields in the database.
+
+# Template:
+
+# table_name:
+# field1_name: mask_function
+# field2_name: mask_function
+
+# Current available anonymization functions:
+# - mask_name: Masks names by replacing them with a generic name.
+# - mask_email: Masks emails by replacing them with a generic email.
+# - mask_cpf: Masks CPF numbers by replacing them with a generic CPF.
+# - mask_phone: Masks phone numbers by replacing them with a generic phone number.
+
+clients:
+  name: mask_name
+  email: mask_email
+  cpf: mask_cpf
+  phone: mask_phone
