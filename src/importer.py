@@ -19,6 +19,11 @@ def import_tables_from_csv(config, input_dir):
         for file in os.listdir(input_dir):
             if file.endswith(".csv"):
                 table_name = file.replace(".csv", "")
+                
+                # 🚫 Skip logging table
+                if table_name == "anonymization_logs":
+                    continue
+                
                 df = pd.read_csv(os.path.join(input_dir, file))
 
                 print(f"Importing table: {table_name}")

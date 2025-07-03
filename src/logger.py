@@ -1,7 +1,7 @@
 import os
 import csv
 import datetime
-from sqlalchemy import text
+from sqlalchemy import text, create_engine
 
 def init_logger(log_dir):
     os.makedirs(log_dir, exist_ok=True)
@@ -16,18 +16,32 @@ def log_to_csv(log_dir, log_entries):
         for entry in log_entries:
             writer.writerow(entry)
 
-def create_logging_table_if_enabled(config, conn):
+def create_logging_table_if_enabled(config, engine):
     if config.get("log_to_database"):
-        conn.execute(text('''
-            CREATE TABLE IF NOT EXISTS anonymization_logs (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                table_name VARCHAR(100),
-                column_name VARCHAR(100),
-                mask_function VARCHAR(100),
-                row_count INT,
-                run_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        '''))
+        db_type = config.get("db_type")
+        with engine.begin() as conn:
+            if db_type == "mysql":
+                conn.execute(text('''
+                    CREATE TABLE IF NOT EXISTS anonymization_logs (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        table_name VARCHAR(100),
+                        column_name VARCHAR(100),
+                        mask_function VARCHAR(100),
+                        row_count INT,
+                        run_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+                    )
+                '''))
+            elif db_type == "postgresql":
+                conn.execute(text('''
+                    CREATE TABLE IF NOT EXISTS anonymization_logs (
+                        id SERIAL PRIMARY KEY,
+                        table_name VARCHAR(100),
+                        column_name VARCHAR(100),
+                        mask_function VARCHAR(100),
+                        row_count INT,
+                        run_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                '''))
 
 def log_to_database(conn, log_entries):
     if not log_entries:

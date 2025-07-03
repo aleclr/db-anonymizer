@@ -1,6 +1,15 @@
+# This file contains the database configuration for the anonymizer application.
+# It specifies the database type, connection details, and logging options.
+
 db_type: mysql # or postgresql
 host: localhost
 port: 3306
 user: root
 password: alec
 database: anon_test
+
+# Logging configuration
+# If log_to_database is true, a logging table will be created in the database.
+
+log_to_database: true
+log_path: logs/

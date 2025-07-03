@@ -6,6 +6,7 @@ import string
 import yaml
 import numpy as np
 from datetime import datetime, timedelta
+from src.logger import log_to_csv
 
 def mask_email(email):
     if pd.isna(email):
@@ -87,23 +88,35 @@ def load_rules(config_path="config/anonymization_rules.yaml"):
         return yaml.safe_load(f)
     
 
-
-def anonymize_csv_files(input_dir, output_dir, rules_path="config/anonymization_rules.yaml"):
+def anonymize_csv_files(input_dir, output_dir, rules_path="config/anonymization_rules.yaml", config=None, db_conn=None):
     os.makedirs(output_dir, exist_ok=True)
     rules = load_rules(rules_path)
+    log_entries = []
 
     for file in os.listdir(input_dir):
         if file.endswith(".csv"):
             table_name = file.replace(".csv", "")
             df = pd.read_csv(os.path.join(input_dir, file))
-
-            # Normalize column names
-            df.columns = [c.strip().lower().replace(" ", "_") for c in df.columns]
-
-            table_rules = rules.get(table_name, {})
-            for column, rule in table_rules.items():
-                if column in df.columns and rule in MASK_FUNCTIONS:
-                    df[column] = df[column].apply(MASK_FUNCTIONS[rule])
-
+            if table_name in rules:
+                for column, rule in rules[table_name].items():
+                    if column in df.columns and rule in MASK_FUNCTIONS:
+                        original_count = df[column].notna().sum()
+                        df[column] = df[column].apply(MASK_FUNCTIONS[rule])
+                        log_entries.append({
+                            "timestamp": datetime.now().isoformat(),
+                            "table": table_name,
+                            "column": column,
+                            "mask_function": rule,
+                            "row_count": int(original_count)
+                        })
             df.to_csv(os.path.join(output_dir, file), index=False)
-            print(f"Anonymized: {file}")
+
+    # Sempre criar o log em csv
+    if config:
+        log_to_csv(config.get("log_path", "logs"), log_entries)
+
+    # Criar tabela de logs no banco de dados se habilitada
+    if config and config.get("log_to_database") and db_conn:
+        from src.logger import log_to_database
+        log_to_database(db_conn, log_entries)
+        db_conn.commit()
