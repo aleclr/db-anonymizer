@@ -24,6 +24,7 @@
 # - hash_value: Hashes the field value using SHA-256.
 
 clients:
+  id: id
   name: mask_name
   email: mask_email
   cpf: mask_cpf
@@ -37,3 +38,10 @@ test_masking:
   test_boolean: mask_boolean
   test_hashme: hash_value
   test_nullme: nullify
+
+clients_orders:
+  id: id
+  client_id: id
+  order_date: mask_date
+  amount: mask_float
+  status: mask_string

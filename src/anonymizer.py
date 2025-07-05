@@ -6,7 +6,10 @@ import string
 import yaml
 import numpy as np
 from datetime import datetime, timedelta
-from src.logger import log_to_csv
+from src.logger import log_to_csv, log_to_database
+from sqlalchemy import inspect
+from src.utils import get_foreign_key_mappings
+
 
 def mask_email(email):
     if pd.isna(email):
@@ -66,6 +69,16 @@ def hash_value(value):
         return value
     return hashlib.sha256(str(value).encode()).hexdigest()
 
+def mask_id_generator():
+    counter = random.randint(1000, 9999)
+
+    def mask_id(_):
+        nonlocal counter
+        counter += 1
+        return counter
+
+    return mask_id
+
 MASK_FUNCTIONS = {
     'mask_email': mask_email,
     'mask_name': mask_name,
@@ -77,7 +90,8 @@ MASK_FUNCTIONS = {
     'mask_date': mask_date,
     'mask_boolean': mask_boolean,
     'nullify': nullify,
-    'hash_value': hash_value
+    'hash_value': hash_value,
+    'id': mask_id_generator()  # Special case for ID generator
 }
 
 def load_rules(config_path="config/anonymization_rules.yaml"):
@@ -92,24 +106,50 @@ def anonymize_csv_files(input_dir, output_dir, rules_path="config/anonymization_
     os.makedirs(output_dir, exist_ok=True)
     rules = load_rules(rules_path)
     log_entries = []
+    pk_mappings = {}
+    
+    inspector = inspect(db_conn) if db_conn else None
+    fk_mapping = get_foreign_key_mappings(db_conn, config["db_type"], config["database"])
 
     for file in os.listdir(input_dir):
-        if file.endswith(".csv"):
-            table_name = file.replace(".csv", "")
-            df = pd.read_csv(os.path.join(input_dir, file))
-            if table_name in rules:
-                for column, rule in rules[table_name].items():
-                    if column in df.columns and rule in MASK_FUNCTIONS:
-                        original_count = df[column].notna().sum()
+        if not file.endswith(".csv"):
+            continue
+
+        table_name = file.replace(".csv", "")
+        df = pd.read_csv(os.path.join(input_dir, file))
+
+        if table_name in rules:
+            table_pk = inspector.get_pk_constraint(table_name).get("constrained_columns", [])
+            table_mapping = {}  # Track for this table
+
+            for column, rule in rules[table_name].items():
+                if column in df.columns and rule in MASK_FUNCTIONS:
+                    original_values = df[column].dropna().unique()
+                    original_count = df[column].notna().sum()
+
+                    # Store PK mapping if this column is the PK
+                    if column in table_pk:
+                        mapping = {}
+                        for value in original_values:
+                            new_value = MASK_FUNCTIONS[rule](value)
+                            mapping[value] = new_value
+                        df[column] = df[column].map(mapping)
+                        table_mapping[column] = mapping
+                    else:
                         df[column] = df[column].apply(MASK_FUNCTIONS[rule])
-                        log_entries.append({
-                            "timestamp": datetime.now().isoformat(),
-                            "table": table_name,
-                            "column": column,
-                            "mask_function": rule,
-                            "row_count": int(original_count)
-                        })
-            df.to_csv(os.path.join(output_dir, file), index=False)
+
+                    log_entries.append({
+                        "timestamp": datetime.now().isoformat(),
+                        "table": table_name,
+                        "column": column,
+                        "mask_function": rule,
+                        "row_count": int(original_count)
+                    })
+
+            if table_mapping:
+                pk_mappings[table_name] = table_mapping  # Store mapping for FK phase
+
+        df.to_csv(os.path.join(output_dir, file), index=False)
 
     # Sempre criar o log em csv
     if config:
@@ -120,3 +160,5 @@ def anonymize_csv_files(input_dir, output_dir, rules_path="config/anonymization_
         from src.logger import log_to_database
         log_to_database(db_conn, log_entries)
         db_conn.commit()
+    
+    return pk_mappings
