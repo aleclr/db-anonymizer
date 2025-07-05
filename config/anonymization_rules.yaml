@@ -1,19 +1,19 @@
-# This file defines the anonymization rules for various fields in the database.
+# Este arquivo define as regras de anonimização para os campos escolhidos para anonimizar no banco de dados.
+# Você pode especificar quais tabelas e quais colunas você deseja anonimizar, e para cada coluna, qual o método de anonimização melhor se encaixa.
 
-# Template:
+# Template: (descomente para usar)
 
-# table_name:
-#   field1_name: mask_function
-#   field2_name: mask_function
-
-# Current available anonymization functions:
+nome_tabela1:
+  nome_coluna1: mask_name
+  nome_coluna2: mask_email
+# Funções de anonimização disponíveis:
 
 # - mask_name: Masks names by replacing them with a generic name.
 # - mask_email: Masks emails by replacing them with a generic email.
 # - mask_cpf: Masks CPF numbers by replacing them with a generic CPF.
 # - mask_phone: Masks phone numbers by replacing them with a generic phone number.
 
-#  Generic functions:
+#  Funções genéricas de anonimização:
 
 # - mask_string: Masks strings by replacing them with a generic string.
 # - mask_integer: Masks integers by replacing them with a random integer.
@@ -22,26 +22,4 @@
 # - mask_boolean: Masks booleans by replacing them with a random boolean.
 # - nullify: Nullifies the field value.
 # - hash_value: Hashes the field value using SHA-256.
-
-clients:
-  id: id
-  name: mask_name
-  email: mask_email
-  cpf: mask_cpf
-  phone: mask_phone
-
-test_masking:
-  test_string: mask_string
-  test_integer: mask_integer
-  test_float: mask_float
-  test_date: mask_date
-  test_boolean: mask_boolean
-  test_hashme: hash_value
-  test_nullme: nullify
-
-clients_orders:
-  id: id
-  client_id: id
-  order_date: mask_date
-  amount: mask_float
-  status: mask_string
+# - id: Generates a unique ID for the field.

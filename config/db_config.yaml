@@ -1,15 +1,19 @@
-# This file contains the database configuration for the anonymizer application.
-# It specifies the database type, connection details, and logging options.
+# Este arquivo contém a configuração do banco de dados para a aplicação de anonimização.
+# Especifica o tipo de banco de dados, detalhes de conexão e opções de usuário.
 
-db_type: mysql # or postgresql
-host: localhost
-port: 3306
-user: root
-password: alec
-database: anon_test
+db_type: seu_db # Valores: mysql ou postgresql
+host: seu_host # Use 'localhost' para conexões locais ou o IP do servidor para conexões remotas
+port: 1234 # Porta padrão para PostgreSQL é 5432, para MySQL é 3306
 
-# Logging configuration
-# If log_to_database is true, a logging table will be created in the database.
+user: seu_usuario # Nome de usuário do banco de dados
+password: seu_pwd # Senha do usuário do banco de dados
+database: nome_do_banco # Nome do banco de dados a ser usado
+
+# Configurações de geração de logs
+
+# Se log_to_database for verdadeiro, uma tabela de logs será criada no banco de dados.
+# Se log_path for especificado, os logs serão salvos em arquivos nesse caminho.
+# A configuração padrão é logs no banco habilitados e o caminho 'logs/' para os logs locais.
 
 log_to_database: true
 log_path: logs/
