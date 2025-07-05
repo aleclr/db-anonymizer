@@ -116,6 +116,44 @@ project-root/
 └── requirements.txt
 ```
 
+## ⚙️ Criação de tabela teste para as funcionalidades de anonimização
+
+Caso queira testar as funções disponíveis na ferramenta, a seguinte tabela pode ser criada, e o seguinte arquivo config de regras pode ser utilizado:
+
+```
+CREATE TABLE teste_anonimizacao (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100),
+    email VARCHAR(100),
+    cpf VARCHAR(11),
+    phone VARCHAR(11),
+    address VARCHAR(200),
+    birth_date DATE,
+    salary DECIMAL(10, 2)
+);
+
+INSERT INTO teste_anonimizacao (name, email, cpf, phone, address, birth_date, salary) VALUES
+('Alice Martins', 'alice@example.com', '12345678901', '11987654321', 'Rua das Flores, 123', '1990-01-15', 5500.75),
+('Bruno Lima', 'bruno@example.com', '23456789012', '21999887766', 'Av. Paulista, 456', '1985-03-22', 7000.50),
+('Carla Souza', 'carla@example.com', '34567890123', '31988776655', 'Rua A, 789', '1992-06-10', 6400.00),
+('Daniel Costa', 'daniel@example.com', '45678901234', '41977665544', 'Av. Central, 1010', '1988-11-05', 8300.25),
+('Eduarda Melo', 'eduarda@example.com', '56789012345', '51966554433', 'Rua B, 202', '1995-09-30', 7200.80);
+```
+<br>
+
+anonymization_rules.yaml
+
+```yaml
+teste_anonimizacao:
+  name: mask_name
+  email: mask_email
+  cpf: mask_cpf
+  phone: mask_phone
+  address: mask_address
+  birth_date: mask_date
+  salary: mask_number
+```
+
 ---
 
-### 🕵️‍♂️ Acesse a wiki para mais informações como pesquisas e plano de updates
+### 🕵️‍♂️ Acesse a [wiki](https://github.com/aleclr/db-anonymizer/wiki) para mais informações como pesquisas e plano de updates
