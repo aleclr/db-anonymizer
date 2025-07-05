@@ -156,4 +156,4 @@ teste_anonimizacao:
 
 ---
 
-### 🕵️‍♂️ Acesse a wiki para mais informações como pesquisas e plano de updates
+### 🕵️‍♂️ Acesse a [wiki](https://github.com/aleclr/db-anonymizer/wiki) para mais informações como pesquisas e plano de updates
