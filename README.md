@@ -19,15 +19,19 @@ A aplicação exporta as tabelas do banco, realiza a anonimização dos dados co
 
 ### 1. `config/db_config.yaml`
 
-Este arquivo contém todas as informações necessárias para a conexão com o banco de dados.
+Este arquivo contém todas as informações necessárias para a conexão com o banco de dados, além das configurações para a geração de logs das mudanças feitas pela ferramenta.
 
 ```yaml
-db_type: mysql # or postgresql
-host: localhost
-port: 3306
-user: your_db_user
-password: your_db_password
-database: your_database_name
+db_type: seu_db # Valores: mysql ou postgresql
+host: seu_host # Use 'localhost' para conexões locais ou o IP do servidor para conexões remotas
+port: 1234 # Porta padrão para PostgreSQL é 5432, para MySQL é 3306
+
+user: seu_usuario # Nome de usuário do banco de dados
+password: seu_pwd # Senha do usuário do banco de dados
+database: nome_do_banco # Nome do banco de dados a ser usado
+
+log_to_database: true
+log_path: logs/
 ```
 
 > ⚠️ Não esqueça de garantir que o banco de dados esteja em funcionamento antes de executar a ferramenta.
@@ -36,7 +40,9 @@ database: your_database_name
 
 ### 2. `config/anonymization_rules.yaml`
 
-Define as regras de anonimização para cada tabela, utilizando as funções de máscara suportadas pela aplicação.
+Define as regras de anonimização para cada tabela e cada coluna, utilizando as funções de máscara suportadas pela aplicação.
+
+Exemplo:
 
 ```yaml
 clients:
@@ -53,6 +59,7 @@ orders:
 
 Funções suportadas atualmente:
 
+- `id`
 - `mask_email`
 - `mask_name`
 - `mask_cpf`
@@ -79,7 +86,11 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. Execute a pipeline
+### 2. Modifique os arquivos de configuração
+
+Adicione as informações de conexão ao seu banco de dados no arquivo `db_config.yaml`, e escolha as colunas desejadas junto com as funções de anonimização no arquivo `anonymization_rules.yaml`.
+
+### 3. Execute a pipeline
 
 Você tem a opção de executar cada passo individualmente:
 
@@ -111,6 +122,8 @@ project-root/
 │   ├── db_connector.py
 │   ├── exporter.py
 │   ├── importer.py
+│   ├── integridade.py
+│   ├── logger.py
 │   └── utils.py
 ├── main.py
 └── requirements.txt
@@ -122,7 +135,7 @@ Caso queira testar as funções disponíveis na ferramenta, a seguinte tabela po
 
 ```
 CREATE TABLE teste_anonimizacao (
-    id SERIAL PRIMARY KEY,
+    id SERIAL PRIMARY KEY, -- utilize id INT AUTO_INCREMENT PRIMARY KEY para o mysql
     name VARCHAR(100),
     email VARCHAR(100),
     cpf VARCHAR(11),
@@ -139,6 +152,7 @@ INSERT INTO teste_anonimizacao (name, email, cpf, phone, address, birth_date, sa
 ('Daniel Costa', 'daniel@example.com', '45678901234', '41977665544', 'Av. Central, 1010', '1988-11-05', 8300.25),
 ('Eduarda Melo', 'eduarda@example.com', '56789012345', '51966554433', 'Rua B, 202', '1995-09-30', 7200.80);
 ```
+
 <br>
 
 anonymization_rules.yaml
