@@ -11,7 +11,9 @@ A aplicação exporta as tabelas do banco, realiza a anonimização dos dados co
 - 🛠 Suporte para MySQL e PostgreSQL
 - 🧾 Configuração simples com arquivos YAML
 - 🔄 Pipeline Completa: Exportação → Anonimização → Importação
-- :ladder: Suporte para execução de etapas separadamente
+- 🪢 Preservação da integridade referencial (PK/FK)
+- 📋 Confirmação com pré-visualização antes da importação final
+- 🪜 Suporte para execução de etapas separadamente
 
 ---
 
