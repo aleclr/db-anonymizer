@@ -13,22 +13,22 @@ def main(step):
     config = load_yaml_config("config/db_config.yaml")
     engine = get_connection(config)
 
-    # Initialize logger directory
+    # Inicializa o logger
     init_logger(config.get("log_path", "logs"))
 
-    # Optionally create logging table in DB
+    # Cria a tabela de logs no banco de dados se habilitado
     create_logging_table_if_enabled(config, engine)
     
     with engine.connect() as conn:
         if step == "export":
             export_tables(conn, "csv_exports", config["db_type"], config["database"])
-            engine.dispose()  # Close the connection after export
+            engine.dispose()  # Fechar a conexão após exportação
             
         elif step == "anonymize":
             pk_mappings = anonymize_csv_files("csv_exports", "csv_anonymized", config=config, db_conn=conn)
             fk_mapping = get_foreign_key_mappings(conn, config["db_type"], config["database"])
             update_foreign_keys(conn, pk_mappings, fk_mapping, output_dir="csv_anonymized")
-            engine.dispose()  # Close the connection after anonymization
+            engine.dispose()  # Fechar a conexão após anonimização
             
         elif step == "import":
             print("\n📋 Aqui está uma preview dos campos anonimizados:")

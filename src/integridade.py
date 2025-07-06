@@ -4,7 +4,7 @@ from sqlalchemy import text
 
 def update_foreign_keys(engine, pk_mappings, fk_mapping, output_dir):
     for (ref_table, ref_column), fk_list in fk_mapping.items():
-        # Skip if we don't have a mapping for this PK
+        # Pular tabelas que não possuem mapeamento de PK
         if ref_table not in pk_mappings or ref_column not in pk_mappings[ref_table]:
             continue
 
@@ -21,6 +21,6 @@ def update_foreign_keys(engine, pk_mappings, fk_mapping, output_dir):
                 print(f"⚠️  Column {fk_column} not in {fk_table}.csv")
                 continue
 
-            df[fk_column] = df[fk_column].map(mapping).fillna(df[fk_column])  # fallback to original if not in mapping
+            df[fk_column] = df[fk_column].map(mapping).fillna(df[fk_column])  # fallback
             df.to_csv(csv_path, index=False)
             print(f"✅ Updated foreign keys in {fk_table}.{fk_column} referencing {ref_table}.{ref_column}")

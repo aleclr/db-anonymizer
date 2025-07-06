@@ -91,7 +91,7 @@ MASK_FUNCTIONS = {
     'mask_boolean': mask_boolean,
     'nullify': nullify,
     'hash_value': hash_value,
-    'id': mask_id_generator()  # Special case for ID generator
+    'id': mask_id_generator()  # Geração de IDs sequenciais
 }
 
 def load_rules(config_path="config/anonymization_rules.yaml"):
@@ -120,14 +120,14 @@ def anonymize_csv_files(input_dir, output_dir, rules_path="config/anonymization_
 
         if table_name in rules:
             table_pk = inspector.get_pk_constraint(table_name).get("constrained_columns", [])
-            table_mapping = {}  # Track for this table
+            table_mapping = {}  # Objeto para armazenar mapeamentos de PK
 
             for column, rule in rules[table_name].items():
                 if column in df.columns and rule in MASK_FUNCTIONS:
                     original_values = df[column].dropna().unique()
                     original_count = df[column].notna().sum()
 
-                    # Store PK mapping if this column is the PK
+                    # Mapeamento para chaves primárias
                     if column in table_pk:
                         mapping = {}
                         for value in original_values:
@@ -147,7 +147,7 @@ def anonymize_csv_files(input_dir, output_dir, rules_path="config/anonymization_
                     })
 
             if table_mapping:
-                pk_mappings[table_name] = table_mapping  # Store mapping for FK phase
+                pk_mappings[table_name] = table_mapping  # Armazenar mapeamentos de PK
 
         df.to_csv(os.path.join(output_dir, file), index=False)
 

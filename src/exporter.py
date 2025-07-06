@@ -1,6 +1,5 @@
 import pandas as pd
 import os
-# from src.utils import sanitize_column_name
 from sqlalchemy import text
 
 def export_tables(conn, output_dir, db_type, database_name):
