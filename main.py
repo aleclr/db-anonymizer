@@ -1,4 +1,6 @@
 import argparse
+import os
+import pandas as pd
 from src.utils import load_yaml_config, get_foreign_key_mappings
 from src.db_connector import get_connection
 from src.exporter import export_tables
@@ -21,19 +23,48 @@ def main(step):
         if step == "export":
             export_tables(conn, "csv_exports", config["db_type"], config["database"])
             engine.dispose()  # Close the connection after export
+            
         elif step == "anonymize":
             pk_mappings = anonymize_csv_files("csv_exports", "csv_anonymized", config=config, db_conn=conn)
             fk_mapping = get_foreign_key_mappings(conn, config["db_type"], config["database"])
             update_foreign_keys(conn, pk_mappings, fk_mapping, output_dir="csv_anonymized")
             engine.dispose()  # Close the connection after anonymization
+            
         elif step == "import":
+            print("\n📋 Aqui está uma preview dos campos anonimizados:")
+            for file in os.listdir("csv_anonymized"):
+                if file.endswith(".csv"):
+                    print(f"\n🔹 {file}")
+                    df = pd.read_csv(os.path.join("csv_anonymized", file))
+                    print(df.head(3))
+
+            confirm = input("\nVoce deseja importar essas tabelas para o banco? (yes/no): ").strip().lower()
+            if confirm == "yes":
+                import_tables_from_csv(config, "csv_anonymized")
+            else:
+                print("❌ Import cancelado pelo usuário.")
             import_tables_from_csv(config, "csv_anonymized")
+            
         elif step == "all":
             export_tables(conn, "csv_exports", config["db_type"], config["database"])
             pk_mappings = anonymize_csv_files("csv_exports", "csv_anonymized", config=config, db_conn=conn)
+            
             fk_mapping = get_foreign_key_mappings(conn, config["db_type"], config["database"])
             update_foreign_keys(conn, pk_mappings, fk_mapping, output_dir="csv_anonymized")
-            import_tables_from_csv(config, "csv_anonymized")
+            
+            print("\n📋 Aqui está uma preview dos campos anonimizados:")
+            for file in os.listdir("csv_anonymized"):
+                if file.endswith(".csv"):
+                    print(f"\n🔹 {file}")
+                    df = pd.read_csv(os.path.join("csv_anonymized", file))
+                    print(df.head(3))
+
+            confirm = input("\nVoce deseja importar essas tabelas para o banco? (yes/no): ").strip().lower()
+            if confirm == "yes":
+                import_tables_from_csv(config, "csv_anonymized")
+            else:
+                print("❌ Import cancelado pelo usuário.")
+                
         else:
             print("Argumento desconhecido. Use um destes: export, anonymize, import, all")
 
